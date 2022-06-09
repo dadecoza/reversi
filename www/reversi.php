@@ -19,6 +19,7 @@ class Reversi {
         if ($this->conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
         }
+        $this->cleanup();
         $this->clear_board();
     }
 
@@ -272,6 +273,19 @@ class Reversi {
     }
 
     function get_best_move($piece) {
+        
+        $maxX=$this->board_cols()-1;
+        $maxY-$this->board_rows()-1;
+        if ($this->is_valid_move([0, 0], $piece)) {
+            return array(0, 0);
+        } elseif ($this->is_valid_move([0, $maxX], $piece)) {
+            return array(0, $maxX);
+        } elseif ($this->is_valid_move([$maxY, 0], $piece)) {
+            return array($maxY, 0);
+        } elseif ($this->is_valid_move([$maxY, $maxX], $piece)) {
+            return array($maxY, $maxX);
+        }
+
         $best = 0;
         $best_coords = array();
         for ($i=0; $i<$this->board_size(); $i++) {
@@ -359,6 +373,16 @@ class Reversi {
             $ts,
             $session
         );
+        $stmt->execute();
+        $stmt->close();
+        return;
+    }
+
+    function cleanup() {
+        $ts = time()-86400;
+        $sql = "DELETE FROM reversi WHERE ts < ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("i", $ts);
         $stmt->execute();
         $stmt->close();
         return;
